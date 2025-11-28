@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Remove Tool
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This script handles removal of RadioStack containers and their data
 

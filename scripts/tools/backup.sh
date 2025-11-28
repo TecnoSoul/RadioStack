@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Backup Tool
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This script handles backups for RadioStack containers
 

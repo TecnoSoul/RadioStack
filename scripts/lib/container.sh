@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Container Library
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This library provides: LXC container lifecycle and configuration operations
 

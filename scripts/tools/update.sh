@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Update Tool
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This script handles updates for RadioStack containers
 

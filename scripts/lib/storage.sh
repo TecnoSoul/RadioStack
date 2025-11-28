@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Storage Library
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This library provides: ZFS dataset operations and storage management
 

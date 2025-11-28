@@ -18,7 +18,7 @@ RadioStack is a comprehensive bash-based deployment framework for running profes
 ## 🚀 Quick Start
 ```bash
 # Clone the repository
-git clone https://github.com/matias-tecnosoul/radiostack.git
+git clone https://github.com/TecnoSoul/RadioStack.git
 cd radiostack
 
 # Deploy AzuraCast station
@@ -176,7 +176,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ### Development Setup
 ```bash
-git clone https://github.com/matias-tecnosoul/radiostack.git
+git clone https://github.com/TecnoSoul/RadioStack.git
 cd radiostack
 ./scripts/dev-setup.sh
 ```
@@ -215,7 +215,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
-- [GitHub Issues](https://github.com/matias-tecnosoul/radiostack/issues)
+- [GitHub Issues](https://github.com/TecnoSoul/RadioStack/issues)
 - [TecnoSoul](https://tecnosoul.com.ar)
 
 

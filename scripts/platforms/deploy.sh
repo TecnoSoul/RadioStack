@@ -1,7 +1,7 @@
 #!/bin/bash
 # RadioStack - Platform Deployment Dispatcher
 # Part of RadioStack unified radio platform deployment system
-# https://github.com/matias-tecnosoul/radiostack
+# https://github.com/TecnoSoul/RadioStack
 #
 # This script routes deployment requests to the appropriate platform handler
 
