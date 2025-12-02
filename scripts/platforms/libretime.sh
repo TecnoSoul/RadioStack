@@ -247,6 +247,12 @@ install_libretime() {
         # Download LibreTime files
         wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker-compose.yml\"
         wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/config.template.yml\"
+        wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/nginx.conf\"
+
+        # Fix nginx.conf to listen on port 80 (internal container port)
+        # The docker-compose.yml maps 8080:80, so nginx must listen on 80 inside the container
+        sed -i 's/listen 8080;/listen 80;/g' nginx.conf
+        sed -i 's/listen \[::]:8080;/listen [::]:80;/g' nginx.conf
 
         # Generate secure random passwords
         echo \"\" >> .env
