@@ -249,11 +249,6 @@ install_libretime() {
         wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/config.template.yml\"
         wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/nginx.conf\"
 
-        # Fix nginx.conf to listen on port 80 (internal container port)
-        # The docker-compose.yml maps 8080:80, so nginx must listen on 80 inside the container
-        sed -i 's/listen 8080;/listen 80;/g' nginx.conf
-        sed -i 's/listen \[::]:8080;/listen [::]:80;/g' nginx.conf
-
         # Generate secure random passwords
         echo \"\" >> .env
         echo \"# Database Configuration\" >> .env
@@ -272,6 +267,23 @@ install_libretime() {
         source .env
         set +a
         envsubst < config.template.yml > config.yml
+
+        # Get container IP address for public_url
+        CONTAINER_IP=\$(hostname -I | awk '{print \$1}')
+
+        # Generate API key and secret key
+        API_KEY=\$(openssl rand -hex 32)
+        SECRET_KEY=\$(openssl rand -hex 32)
+
+        # Configure required LibreTime settings
+        # Update public_url with container IP
+        sed -i \"s|public_url:.*|public_url: http://\${CONTAINER_IP}|g\" config.yml
+
+        # Update api_key
+        sed -i \"s|api_key:.*|api_key: \${API_KEY}|g\" config.yml
+
+        # Update secret_key
+        sed -i \"s|secret_key:.*|secret_key: \${SECRET_KEY}|g\" config.yml
 
         # Update configuration for external media path
         sed -i 's|storage_path:.*|storage_path: $media_path|g' config.yml

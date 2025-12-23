@@ -11,7 +11,8 @@
       "Bash(./scripts/platforms/azuracast.sh:*)",
       "Bash(./scripts/tools/status.sh:*)",
       "Bash(./scripts/tools/info.sh:*)",
-      "Bash(sudo ./scripts/tools/info.sh:*)"
+      "Bash(sudo ./scripts/tools/info.sh:*)",
+      "Bash(pct exec:*)"
     ],
     "deny": [],
     "ask": []
