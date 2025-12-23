@@ -253,18 +253,18 @@ install_libretime() {
         wget -q "https://raw.githubusercontent.com/libretime/libretime/'"$LIBRETIME_VERSION"'/docker/config.template.yml"
         wget -q "https://raw.githubusercontent.com/libretime/libretime/'"$LIBRETIME_VERSION"'/docker/nginx.conf"
 
-        # Generate secure random passwords
+        # Generate secure random passwords (using hex to avoid special characters)
         echo "" >> .env
         echo "# Database Configuration" >> .env
-        echo "POSTGRES_PASSWORD=$(openssl rand -base64 32)" >> .env
+        echo "POSTGRES_PASSWORD=$(openssl rand -hex 32)" >> .env
         echo "" >> .env
         echo "# RabbitMQ Configuration" >> .env
-        echo "RABBITMQ_DEFAULT_PASS=$(openssl rand -base64 32)" >> .env
+        echo "RABBITMQ_DEFAULT_PASS=$(openssl rand -hex 32)" >> .env
         echo "" >> .env
         echo "# Icecast Configuration" >> .env
-        echo "ICECAST_SOURCE_PASSWORD=$(openssl rand -base64 32)" >> .env
-        echo "ICECAST_ADMIN_PASSWORD=$(openssl rand -base64 32)" >> .env
-        echo "ICECAST_RELAY_PASSWORD=$(openssl rand -base64 32)" >> .env
+        echo "ICECAST_SOURCE_PASSWORD=$(openssl rand -hex 32)" >> .env
+        echo "ICECAST_ADMIN_PASSWORD=$(openssl rand -hex 32)" >> .env
+        echo "ICECAST_RELAY_PASSWORD=$(openssl rand -hex 32)" >> .env
 
         # Generate configuration file
         set -a
@@ -296,15 +296,31 @@ install_libretime() {
         mkdir -p '"$media_path"'
         chown -R 1000:1000 '"$media_path"' || true
 
+        # Add restart policy to docker-compose.yml for auto-start after reboot
+        echo "Configuring auto-start on reboot..."
+        sed -i "/^services:/a\\  # Auto-restart configuration added by RadioStack" docker-compose.yml
+
+        # Add restart: unless-stopped to all services
+        sed -i "/^  [a-z]*:$/a\\    restart: unless-stopped" docker-compose.yml
+
         # Start LibreTime services
         docker-compose up -d
 
-        # Wait for services to initialize
-        echo "Waiting for services to start..."
-        sleep 45
+        # Wait for PostgreSQL to be fully ready
+        echo "Waiting for database to be ready..."
+        sleep 20
 
-        # Initialize database
-        docker-compose exec -T libretime bash -c "cd /var/www/libretime && php artisan migrate --force" || true
+        # Run database migrations
+        echo "Running database migrations..."
+        docker-compose exec -T api libretime-api migrate
+
+        # Wait for all services to initialize
+        echo "Waiting for services to start..."
+        sleep 30
+
+        # Restart services to ensure clean connections
+        echo "Restarting services..."
+        docker-compose restart
     '; then
         log_error "LibreTime installation failed"
         return 1
