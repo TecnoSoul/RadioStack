@@ -234,37 +234,37 @@ install_libretime() {
 
     log_info "Downloading and installing LibreTime..."
 
-    if ! pct exec "$ctid" -- bash -c "
+    if ! pct exec "$ctid" -- bash -c '
         set -e
 
         # Create installation directory
-        mkdir -p '$install_path'
-        cd '$install_path'
+        mkdir -p '"$install_path"'
+        cd '"$install_path"'
 
         # Install envsubst for config template processing
         apt-get update -qq
         apt-get install -y -qq gettext-base
 
         # Set LibreTime version
-        echo \"LIBRETIME_VERSION=\$LIBRETIME_VERSION\" > .env
+        echo "LIBRETIME_VERSION='"$LIBRETIME_VERSION"'" > .env
 
         # Download LibreTime files
-        wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker-compose.yml\"
-        wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/config.template.yml\"
-        wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker/nginx.conf\"
+        wget -q "https://raw.githubusercontent.com/libretime/libretime/'"$LIBRETIME_VERSION"'/docker-compose.yml"
+        wget -q "https://raw.githubusercontent.com/libretime/libretime/'"$LIBRETIME_VERSION"'/docker/config.template.yml"
+        wget -q "https://raw.githubusercontent.com/libretime/libretime/'"$LIBRETIME_VERSION"'/docker/nginx.conf"
 
         # Generate secure random passwords
-        echo \"\" >> .env
-        echo \"# Database Configuration\" >> .env
-        echo \"POSTGRES_PASSWORD=\$(openssl rand -base64 32)\" >> .env
-        echo \"\" >> .env
-        echo \"# RabbitMQ Configuration\" >> .env
-        echo \"RABBITMQ_DEFAULT_PASS=\$(openssl rand -base64 32)\" >> .env
-        echo \"\" >> .env
-        echo \"# Icecast Configuration\" >> .env
-        echo \"ICECAST_SOURCE_PASSWORD=\$(openssl rand -base64 32)\" >> .env
-        echo \"ICECAST_ADMIN_PASSWORD=\$(openssl rand -base64 32)\" >> .env
-        echo \"ICECAST_RELAY_PASSWORD=\$(openssl rand -base64 32)\" >> .env
+        echo "" >> .env
+        echo "# Database Configuration" >> .env
+        echo "POSTGRES_PASSWORD=$(openssl rand -base64 32)" >> .env
+        echo "" >> .env
+        echo "# RabbitMQ Configuration" >> .env
+        echo "RABBITMQ_DEFAULT_PASS=$(openssl rand -base64 32)" >> .env
+        echo "" >> .env
+        echo "# Icecast Configuration" >> .env
+        echo "ICECAST_SOURCE_PASSWORD=$(openssl rand -base64 32)" >> .env
+        echo "ICECAST_ADMIN_PASSWORD=$(openssl rand -base64 32)" >> .env
+        echo "ICECAST_RELAY_PASSWORD=$(openssl rand -base64 32)" >> .env
 
         # Generate configuration file
         set -a
@@ -273,39 +273,39 @@ install_libretime() {
         envsubst < config.template.yml > config.yml
 
         # Get container IP address for public_url
-        CONTAINER_IP=\$(hostname -I | awk '{print \$1}')
+        CONTAINER_IP=$(hostname -I | awk "{print \$1}")
 
         # Generate API key and secret key
-        API_KEY=\$(openssl rand -hex 32)
-        SECRET_KEY=\$(openssl rand -hex 32)
+        API_KEY=$(openssl rand -hex 32)
+        SECRET_KEY=$(openssl rand -hex 32)
 
         # Configure required LibreTime settings
         # Update public_url with container IP
-        sed -i \"s|public_url:.*|public_url: http://\${CONTAINER_IP}|g\" config.yml
+        sed -i "s|public_url:.*|public_url: http://${CONTAINER_IP}|g" config.yml
 
         # Update api_key
-        sed -i \"s|api_key:.*|api_key: \${API_KEY}|g\" config.yml
+        sed -i "s|api_key:.*|api_key: ${API_KEY}|g" config.yml
 
         # Update secret_key
-        sed -i \"s|secret_key:.*|secret_key: \${SECRET_KEY}|g\" config.yml
+        sed -i "s|secret_key:.*|secret_key: ${SECRET_KEY}|g" config.yml
 
         # Update configuration for external media path
-        sed -i 's|storage_path:.*|storage_path: $media_path|g' config.yml
+        sed -i "s|storage_path:.*|storage_path: '"$media_path"'|g" config.yml
 
         # Ensure media directory has correct permissions
-        mkdir -p '$media_path'
-        chown -R 1000:1000 '$media_path' || true
+        mkdir -p '"$media_path"'
+        chown -R 1000:1000 '"$media_path"' || true
 
         # Start LibreTime services
         docker-compose up -d
 
         # Wait for services to initialize
-        echo \"Waiting for services to start...\"
+        echo "Waiting for services to start..."
         sleep 45
 
         # Initialize database
-        docker-compose exec -T libretime bash -c 'cd /var/www/libretime && php artisan migrate --force' || true
-    "; then
+        docker-compose exec -T libretime bash -c "cd /var/www/libretime && php artisan migrate --force" || true
+    '; then
         log_error "LibreTime installation failed"
         return 1
     fi
