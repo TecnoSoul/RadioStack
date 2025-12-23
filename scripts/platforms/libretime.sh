@@ -241,8 +241,12 @@ install_libretime() {
         mkdir -p '$install_path'
         cd '$install_path'
 
+        # Install envsubst for config template processing
+        apt-get update -qq
+        apt-get install -y -qq gettext-base
+
         # Set LibreTime version
-        echo 'LIBRETIME_VERSION=$LIBRETIME_VERSION' > .env
+        echo \"LIBRETIME_VERSION=\$LIBRETIME_VERSION\" > .env
 
         # Download LibreTime files
         wget -q \"https://raw.githubusercontent.com/libretime/libretime/\$LIBRETIME_VERSION/docker-compose.yml\"
