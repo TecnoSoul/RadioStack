@@ -243,6 +243,10 @@ install_azuracast() {
             }
         }' docker-compose.yml
 
+        # Remove orphaned station_data volume if it exists
+        # This cleans up the volume created during initial installation
+        docker volume rm azuracast_station_data 2>/dev/null || true
+
         # Restart services with new configuration
         docker compose up -d
     "; then
