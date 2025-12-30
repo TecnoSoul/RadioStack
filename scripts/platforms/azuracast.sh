@@ -207,7 +207,55 @@ install_azuracast() {
         return 1
     fi
 
-    log_success "AzuraCast installed successfully"
+    log_info "Configuring AzuraCast to use mounted HDD storage..."
+
+    if ! pct exec "$ctid" -- bash -c "
+        set -e
+        cd '$install_path'
+
+        # Stop services before modifying configuration
+        docker compose down || true
+
+        # Backup original docker-compose.yml
+        cp docker-compose.yml docker-compose.yml.bak
+
+        # Create stations directory on mounted HDD storage
+        mkdir -p '$install_path/stations'
+        chown -R 1000:1000 '$install_path/stations'
+
+        # Replace Docker volume with mounted path for station data
+        # This ensures media files are stored on the HDD instead of fast storage
+        sed -i 's|station_data:/var/azuracast/stations|$install_path/stations:/var/azuracast/stations:rw|g' docker-compose.yml
+
+        # Remove the station_data volume definition from the volumes section
+        # Use a more precise sed command to avoid affecting other volumes
+        sed -i '/^volumes:/,/^[^ ]/ {
+            /station_data:/d
+        }' docker-compose.yml
+
+        # Clean up empty volumes section if station_data was the only volume
+        sed -i '/^volumes:$/,/^[^ ]/ {
+            /^volumes:$/ {
+                N
+                /^volumes:\n[^ ]/ {
+                    s/^volumes:\n//
+                }
+            }
+        }' docker-compose.yml
+
+        # Remove orphaned station_data volume if it exists
+        # This cleans up the volume created during initial installation
+        docker volume rm azuracast_station_data 2>/dev/null || true
+
+        # Restart services with new configuration
+        docker compose up -d
+    "; then
+        log_error "Failed to configure storage - AzuraCast installed but using default Docker volumes"
+        log_warn "You may need to manually update docker-compose.yml to use $install_path/stations"
+        return 1
+    fi
+
+    log_success "AzuraCast installed and configured for HDD storage successfully"
     return 0
 }
 
@@ -238,6 +286,14 @@ display_azuracast_success() {
     echo "Access:"
     echo "  Web Interface:  http://$ip_address"
     echo "  Console:        pct enter $ctid"
+    echo ""
+    echo "Storage Configuration:"
+    echo "  Media Path:     $install_path/stations"
+    echo "  Storage Type:   HDD (mounted ZFS dataset)"
+    echo ""
+    echo "Verify Storage (optional):"
+    echo "  pct exec $ctid -- df -h $install_path"
+    echo "  pct exec $ctid -- grep '$install_path/stations' $install_path/docker-compose.yml"
     echo ""
     echo "Next Steps:"
     echo "  1. Wait 2-3 minutes for AzuraCast to finish starting"
