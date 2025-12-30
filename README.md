@@ -2,7 +2,7 @@
 
 **Unified Radio Platform Deployment System for Proxmox**
 
-RadioStack is a comprehensive bash-based deployment framework for running professional radio broadcasting platforms (AzuraCast, LibreTime) on Proxmox VE. Built for sysadmins who want simple, powerful, and maintainable radio infrastructure.
+RadioStack is a comprehensive bash-based deployment framework for running professional radio broadcasting platforms (AzuraCast, LibreTime) on Proxmox VE. Built for sysadmins who want standarized, maintainable radio infrastructure using IaC.
 
 ## 🎯 Features
 
