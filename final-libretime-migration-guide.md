@@ -132,11 +132,17 @@ pct push 151 /tmp/aconcagua1-db-*.sql /root/libretime-db.sql
 # Stop services before database restore
 pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml stop
 
-# Restore database
+# Restore database (use psql for .sql files, pg_restore for .dump files)
 pct exec 151 -- bash -c 'cd /opt/libretime && \
   docker compose start postgres && \
   sleep 10 && \
-  docker compose exec -T postgres psql -U libretime < /root/libretime-db.sql'
+  docker compose exec -T postgres psql -U libretime -d libretime < /root/libretime-db.sql'
+
+# Run database migrations to upgrade schema to 4.5.0
+pct exec 151 -- bash -c 'cd /opt/libretime && \
+  docker compose up -d && \
+  sleep 15 && \
+  docker compose exec -T api libretime-api migrate'
 
 # Verify database
 pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml exec -T postgres \
@@ -147,15 +153,26 @@ pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml exec -T post
 ### STEP 5: Transfer Media Files (~30-60 minutes, depends on size)
 
 ```bash
+# Stop services before file transfer
+pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml stop
+
 # Direct rsync from Jupiter to Venus HDD storage
 rsync -avP --info=progress2 \
   root@jupiter:/var/lib/docker/volumes/libretime_storage/_data/ \
   /hdd-pool/container-data/libretime-media/aconcagua1/
 
-# Fix permissions
-pct exec 151 -- chown -R 1000:1000 /srv/libretime/
+# Fix any nested directory structure (if files are in /srv/libretime/srv/libretime)
+if [ -d /hdd-pool/container-data/libretime-media/aconcagua1/srv/libretime ]; then
+  mv /hdd-pool/container-data/libretime-media/aconcagua1/srv/libretime/* \
+     /hdd-pool/container-data/libretime-media/aconcagua1/
+  rmdir /hdd-pool/container-data/libretime-media/aconcagua1/srv/libretime
+  rmdir /hdd-pool/container-data/libretime-media/aconcagua1/srv
+fi
 
-# Verify media is accessible
+# Fix permissions on host (container UID 1000 = host UID 101000)
+chown -R 101000:101000 /hdd-pool/container-data/libretime-media/aconcagua1/
+
+# Verify from container perspective
 pct exec 151 -- ls -lh /srv/libretime/imported/ | head -10
 pct exec 151 -- df -h /srv/libretime
 ```
