@@ -12,7 +12,8 @@
       "Bash(./scripts/tools/status.sh:*)",
       "Bash(./scripts/tools/info.sh:*)",
       "Bash(sudo ./scripts/tools/info.sh:*)",
-      "Bash(pct exec:*)"
+      "Bash(pct exec:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

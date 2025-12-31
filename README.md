@@ -12,7 +12,6 @@ RadioStack is a comprehensive bash-based deployment framework for running profes
 - 🔄 **Bulk operations** - update all, backup all, status checks
 - 📊 **Simple inventory** - CSV-based tracking of all stations
 - 🎛️ **Multi-station support** - deploy dozens of stations on one host
-- 🔧 **Production-tested** by TecnoSoul (20+ stations running)
 - 📚 **Comprehensive docs** - from basics to advanced patterns
 
 ## 🚀 Quick Start
@@ -80,12 +79,11 @@ RadioStack uses LXC containers with a two-tier storage strategy:
 ## 📚 Documentation
 
 - [Getting Started Guide](docs/getting-started.md) - Installation and first deployment
-- [Deployment Guide](docs/deployment-guide.md) - Detailed deployment procedures
-- [AzuraCast Guide](docs/azuracast.md) - AzuraCast-specific documentation
-- [LibreTime Guide](docs/libretime.md) - LibreTime-specific documentation
-- [Architecture Overview](docs/architecture.md) - System design and patterns
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-- [API Reference](docs/api-reference.md) - Script functions and parameters
+- [LibreTime Guide](docs/libretime.md) - LibreTime 4.5.0 deployment and management
+- [Storage Configuration](docs/storage-configuration.md) - Two-tier storage architecture guide
+- [Quick Reference](docs/quick-reference.md) - Common commands and operations
+- [Testing Guide](TESTING.md) - Automated and manual testing procedures
+- [Changelog](CHANGELOG.md) - Version history and fixes
 
 ## 🎯 Use Cases
 
@@ -113,52 +111,38 @@ for region in north south east west; do
   ((i++))
 done
 ```
-## Proposed Repository Structure:
+## 📁 Repository Structure
 
-radiostack/  
+```
+radiostack/
 ├── README.md
 ├── LICENSE
 ├── CHANGELOG.md
+├── TESTING.md
 ├── docs/
 │   ├── getting-started.md
-│   ├── deployment-guide.md
-│   ├── azuracast.md
 │   ├── libretime.md
-│   ├── architecture.md
-│   └── troubleshooting.md
+│   ├── quick-reference.md
+│   └── storage-configuration.md
 ├── scripts/
-│   ├── radiostack.sh              # Main CLI entry point
 │   ├── lib/
-│   │   ├── common.sh              # Common functions
-│   │   ├── container.sh           # Container operations
-│   │   ├── storage.sh             # ZFS operations
-│   │   └── inventory.sh           # Inventory management
+│   │   ├── common.sh              # Logging, validation, utilities
+│   │   ├── container.sh           # LXC container operations
+│   │   ├── storage.sh             # ZFS dataset management
+│   │   └── inventory.sh           # Station tracking
 │   ├── platforms/
-│   │   ├── azuracast.sh
-│   │   ├── libretime.sh
-│   │   └── icecast.sh             # Future: standalone Icecast
+│   │   ├── azuracast.sh           # AzuraCast deployment
+│   │   ├── libretime.sh           # LibreTime deployment
+│   │   └── deploy.sh              # Platform dispatcher
 │   └── tools/
-│       ├── bulk-operations.sh
-│       ├── backup.sh
-│       └── migrate.sh
-├── configs/
-│   ├── azuracast.conf.example
-│   ├── libretime.conf.example
-│   └── inventory.csv.example
-├── templates/
-│   ├── docker-compose/
-│   │   ├── azuracast.yml
-│   │   └── libretime.yml
-│   └── nginx/
-│       ├── azuracast-proxy.conf
-│       └── libretime-proxy.conf
-├── tests/
-│   ├── test-azuracast.sh
-│   └── test-libretime.sh
-└── examples/
-    ├── basic-deployment.sh
-    ├── multi-station.sh
-    └── migration.sh
+│       ├── status.sh              # View station status
+│       ├── update.sh              # Update platforms
+│       ├── backup.sh              # Backup operations
+│       ├── remove.sh              # Remove stations
+│       ├── info.sh                # Detailed information
+│       └── logs.sh                # View logs
+└── test-radiostack.sh             # Automated test suite
+```
 
 
 ## 🔧 Platform Support
@@ -172,13 +156,18 @@ radiostack/
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please open an issue or submit a pull request.
 
 ### Development Setup
 ```bash
 git clone https://github.com/TecnoSoul/RadioStack.git
-cd radiostack
-./scripts/dev-setup.sh
+cd RadioStack
+
+# Run tests
+sudo ./test-radiostack.sh
+
+# Test deployment
+sudo ./scripts/platforms/libretime.sh -i 999 -n test -c 2 -m 4096 -q 50G
 ```
 
 ## 📊 Real-World Usage
@@ -190,19 +179,25 @@ RadioStack is used in production by:
 
 ## 🐛 Troubleshooting
 
-Common issues and solutions are documented in [docs/troubleshooting.md](docs/troubleshooting.md).
-
 Quick diagnostics:
 ```bash
-# Check system requirements
-radiostack check
+# Check status of all stations
+sudo ./scripts/tools/status.sh --all
 
-# Validate container configuration
-radiostack validate --ctid 340
+# Get detailed container information
+sudo ./scripts/tools/info.sh --ctid 340
 
 # View logs
-radiostack logs --ctid 340 --tail 50
+sudo ./scripts/tools/logs.sh --ctid 340 --follow
+
+# Run automated tests
+sudo ./test-radiostack.sh
 ```
+
+For specific issues:
+- **LibreTime**: See [docs/libretime.md](docs/libretime.md) troubleshooting section
+- **Storage**: See [docs/storage-configuration.md](docs/storage-configuration.md)
+- **Quick commands**: See [docs/quick-reference.md](docs/quick-reference.md)
 
 ## 📝 License
 
