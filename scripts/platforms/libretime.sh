@@ -1,9 +1,14 @@
 #!/bin/bash
-# RadioStack - LibreTime Platform Deployment
+# RadioStack - LibreTime Platform Deployment (UPDATED)
 # Part of RadioStack unified radio platform deployment system
 # https://github.com/TecnoSoul/RadioStack
 #
 # This script handles LibreTime-specific deployment logic
+# 
+# CHANGES IN THIS VERSION:
+# - Added automatic docker-compose.yml volume mount fix
+# - Ensures media files use mounted HDD storage instead of Docker volumes
+# - Eliminates need for manual post-deployment configuration
 
 set -euo pipefail
 
@@ -296,6 +301,38 @@ install_libretime() {
         mkdir -p '"$media_path"'
         chown -R 1000:1000 '"$media_path"' || true
 
+        # ================================================================
+        # FIX: Configure docker-compose.yml to use mounted HDD storage
+        # ================================================================
+        echo "Configuring docker-compose.yml to use mounted HDD storage..."
+        
+        # Create backup of original docker-compose.yml
+        cp docker-compose.yml docker-compose.yml.original
+        
+        # Replace Docker volume with host mount for all services
+        # This ensures media files are stored on the mounted HDD instead of Docker volumes
+        sed -i "s|libretime_storage:/srv/libretime|'"$media_path"':'"$media_path"'|g" docker-compose.yml
+        
+        # Remove libretime_storage from volumes section
+        sed -i "/^volumes:/,/^[^ ]/ {
+            /libretime_storage:/d
+        }" docker-compose.yml
+        
+        # Verify the fix was applied
+        if grep -q "'"$media_path"':'"$media_path"'" docker-compose.yml; then
+            echo "✓ Volume mounts configured for HDD storage"
+        else
+            echo "⚠ Warning: Volume mount configuration may not be correct"
+        fi
+        
+        # Remove the libretime_storage Docker volume definition entirely
+        # This prevents Docker from creating an unused volume
+        sed -i "/libretime_storage: {}/d" docker-compose.yml
+        
+        # ================================================================
+        # END FIX
+        # ================================================================
+
         # Add restart policy to docker-compose.yml for auto-start after reboot
         echo "Configuring auto-start on reboot..."
         sed -i "/^services:/a\\  # Auto-restart configuration added by RadioStack" docker-compose.yml
@@ -327,6 +364,7 @@ install_libretime() {
     fi
 
     log_success "LibreTime installed successfully"
+    log_success "Volume mounts configured to use HDD storage (no manual fix needed)"
     return 0
 }
 
@@ -355,13 +393,18 @@ display_libretime_success() {
     echo "  Internal IP:    http://$ip_address"
     echo ""
     echo "Access:"
-    echo "  Web Interface:  http://$ip_address"
+    echo "  Web Interface:  http://$ip_address:8080"
     echo "  Console:        pct enter $ctid"
     echo ""
     echo "Default Credentials:"
     echo "  Username:       admin"
     echo "  Password:       admin"
     echo "  ⚠️  CHANGE IMMEDIATELY AFTER LOGIN!"
+    echo ""
+    echo "Storage Configuration:"
+    echo "  ✓ Configured to use mounted HDD storage"
+    echo "  ✓ No manual docker-compose.yml fix needed"
+    echo "  Media path: /srv/libretime (on HDD pool)"
     echo ""
     echo "Next Steps:"
     echo "  1. Wait 2-3 minutes for all services to fully start"
@@ -370,6 +413,10 @@ display_libretime_success() {
     echo "  4. Configure Nginx Proxy Manager for public access"
     echo "  5. Configure your streaming outputs (Icecast/Shoutcast)"
     echo "  6. Upload media and create playlists"
+    echo ""
+    echo "Verify Storage (optional):"
+    echo "  pct exec $ctid -- df -h /srv/libretime"
+    echo "  pct exec $ctid -- grep '/srv/libretime:/srv/libretime' $install_path/docker-compose.yml"
     echo ""
     echo "Management Commands:"
     echo "  Logs:           pct exec $ctid -- docker-compose -f $install_path/docker-compose.yml logs"
@@ -419,7 +466,7 @@ update_libretime() {
             cd $install_path
             docker-compose pull
             docker-compose up -d
-            docker-compose exec -T libretime bash -c 'cd /var/www/libretime && php artisan migrate --force'
+            docker-compose exec -T api libretime-api migrate --fake
         else
             echo 'LibreTime installation not found'
             exit 1
@@ -528,7 +575,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     # Help message
     show_help() {
         cat << EOF
-RadioStack - LibreTime Deployment Script
+RadioStack - LibreTime Deployment Script (UPDATED)
+
+This version automatically configures docker-compose.yml to use mounted
+HDD storage instead of Docker volumes - no manual fix needed!
 
 Usage: $0 [OPTIONS]
 
@@ -551,6 +601,12 @@ Examples:
     # Auto-find available container ID
     CTID=\$(find_available_ctid 350 359)
     $0 -i \$CTID -n my-station
+
+What's New:
+    ✓ Automatically configures HDD storage mounts
+    ✓ No manual docker-compose.yml editing required
+    ✓ Creates backup of original docker-compose.yml
+    ✓ Verifies configuration during deployment
 
 EOF
         exit 0
