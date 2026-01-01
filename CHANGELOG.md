@@ -30,6 +30,7 @@ First stable release of RadioStack - a comprehensive deployment framework for ra
 - `remove.sh` - Safely remove stations with optional data cleanup
 - `info.sh` - Display detailed container information
 - `logs.sh` - View container and application logs with follow mode
+- `fix-libretime-volumes.sh` - Migrate existing LibreTime deployments to HDD storage
 
 **Documentation**
 - Comprehensive LibreTime deployment guide (docs/libretime.md)
@@ -45,7 +46,20 @@ First stable release of RadioStack - a comprehensive deployment framework for ra
 - Automatic configuration of docker-compose.yml to use HDD-mounted storage paths
 - Created fix-azuracast-storage.sh script for migrating existing deployments
 - Added verification steps to ensure proper storage configuration
-- See [docs/storage-configuration.md](docs/storage-configuration.md) for complete details
+- See docs/storage-configuration.md for complete details
+
+**LibreTime Storage Configuration (January 2025)**
+- **Critical: Fixed Docker volume mounts to use HDD storage** (libretime.sh:304-334)
+  - Automatic configuration of docker-compose.yml during deployment
+  - Replaces `libretime_storage:/srv/libretime` with `/srv/libretime:/srv/libretime`
+  - Removes Docker volume definitions that store media on fast NVMe storage
+  - Impact: Media files now correctly stored on HDD as intended by two-tier architecture
+  - Eliminates need for manual docker-compose.yml editing after deployment
+
+- Added `fix-libretime-volumes.sh` tool for existing deployments
+  - Migrates existing LibreTime deployments from Docker volumes to HDD mounts
+  - Automated backup creation and verification
+  - Safe to run on already-fixed deployments (idempotent)
 
 **LibreTime 4.5.0 Deployment (December 2024)**
 - **Critical: Fixed variable expansion in Bash heredoc** (libretime.sh:237-317)
@@ -76,6 +90,7 @@ First stable release of RadioStack - a comprehensive deployment framework for ra
 - ✅ Web interfaces accessible
 - ✅ Audio streaming functionality verified
 - ✅ Auto-start on reboot confirmed
+- ✅ LibreTime volume fix tested on production deployment (aconcagua2/CT152)
 
 ### Technical Details
 
@@ -83,17 +98,19 @@ First stable release of RadioStack - a comprehensive deployment framework for ra
 1. **Bash Heredoc Quoting**: Use `bash -c '...'` with selective variable injection instead of `bash -c "..."`
 2. **LibreTime Version Compatibility**: Use new Python-based API migration command for 4.5.0+
 3. **Configuration Requirements**: Auto-generate required fields during deployment
+4. **Volume Mount Fix**: Automatically configure docker-compose.yml to use host mounts instead of Docker volumes
 
 **Storage Architecture:**
 - Container OS on fast storage (NVMe/SSD pool)
 - Media files on bulk storage (HDD ZFS pool with compression)
-- Automatic bind mount configuration
+- Automatic bind mount configuration for both AzuraCast and LibreTime
 - Proper UID mapping for unprivileged containers (100000:100000)
 
 ### Notes for Future Versions
 - When updating to LibreTime 5.x, verify the migration command syntax
 - Monitor LibreTime GitHub for changes to docker-compose.yml structure
 - Use Git tag or branch name for versions, not "stable" or "latest"
+- The volume fix applies to both new deployments and existing installations
 
 ### Credits
 - **Created by**: TecnoSoul & Claude AI
