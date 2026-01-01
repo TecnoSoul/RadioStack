@@ -67,6 +67,8 @@ cd /opt/libretime
 docker compose exec -T postgres pg_dump -U libretime libretime \
   > /root/libretime-backups/${STATION_NAME}-db-${BACKUP_DATE}.sql
 
+sudo -u postgres pg_dump -F c libretime > libretime-bak-dic25.dump
+
 # 2. Backup configuration
 tar czf /root/libretime-backups/${STATION_NAME}-config-${BACKUP_DATE}.tar.gz \
   config.yml .env docker-compose.yml
@@ -121,7 +123,7 @@ pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml ps
 ```
 
 ### STEP 4: Transfer Database (~5 minutes)
-
+rsync -avzP --info=progress2 -e 'ssh -p 22'   libretime-bak-dic25.dump root@51.79.77.238:/hdd-pool/migration-jupiter/aconcagua1/
 ```bash
 # On Venus, transfer database from Jupiter
 scp root@jupiter:/root/libretime-backups/aconcagua1-db-*.sql /tmp/
@@ -160,6 +162,8 @@ pct exec 151 -- docker compose -f /opt/libretime/docker-compose.yml stop
 rsync -avP --info=progress2 \
   root@jupiter:/var/lib/docker/volumes/libretime_storage/_data/ \
   /hdd-pool/container-data/libretime-media/aconcagua1/
+
+rsync -avzP --info=progress2 -e 'ssh -p 22'   libretime-bak-dic25.dump root@51.79.77.238:/hdd-pool/migration-jupiter/aconcagua1/
 
 # Fix any nested directory structure (if files are in /srv/libretime/srv/libretime)
 if [ -d /hdd-pool/container-data/libretime-media/aconcagua1/srv/libretime ]; then
