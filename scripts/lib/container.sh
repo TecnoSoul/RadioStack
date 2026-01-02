@@ -517,7 +517,6 @@ setup_container_system() {
 # Parameters:
 #   $1 - ctid
 # Returns: 0 on success, 1 on failure
-# Example: setup_docker "340"
 setup_docker() {
     local ctid=$1
 
@@ -543,9 +542,21 @@ setup_docker() {
 
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-        # Install Docker
+        # Update package list
         apt-get update
-        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+        # Install Docker - let apt choose latest working versions
+        # This avoids 404 errors when specific versions disappear from CDN
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin || {
+            # Fallback: Try with slightly older but stable versions
+            echo "Retrying with pinned stable versions..."
+            apt-get install -y \
+                containerd.io=2.2.0-2~debian.13~trixie \
+                docker-ce-cli=5:29.1.2-1~debian.13~trixie \
+                docker-ce=5:29.1.2-1~debian.13~trixie \
+                docker-buildx-plugin \
+                docker-compose-plugin
+        }
 
         # Start and enable Docker
         systemctl start docker
@@ -558,7 +569,6 @@ setup_docker() {
     log_success "Docker installed successfully"
     return 0
 }
-
 #=============================================================================
 # CONTAINER OPERATIONS
 #=============================================================================
